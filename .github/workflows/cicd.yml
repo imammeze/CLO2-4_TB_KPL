@@ -1,0 +1,67 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main # Trigger on pushes to the main branch
+  pull_request:
+    branches:
+      - main # Trigger on pull requests targeting the main branch
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Specify your Node.js version
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm test # Assumes you have a 'test' script in your package.json for unit/integration tests
+
+      - name: Run linting (Continuous Inspection)
+        run: npm run lint # Assumes you have a 'lint' script in your package.json for code style and quality checks
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build-and-test # This job depends on the successful completion of build-and-test
+    if: github.ref == 'refs/heads/main' # Only deploy if the push is to the main branch
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Specify your Node.js version
+
+      - name: Install dependencies
+        run: npm install --production # Install only production dependencies
+
+      - name: Deploy to server (Example: SSH to server and pull code)
+        # This is a placeholder. You'll need to replace this with your actual deployment steps.
+        # Examples could include:
+        # - Using a deployment tool like PM2, Capistrano, or your cloud provider's CLI
+        # - SCP to copy files to a server
+        # - Docker deployment
+        run: |
+          echo "Deploying application to production server..."
+          # Example using SSH (ensure SSH_PRIVATE_KEY and REMOTE_HOST are set as GitHub Secrets)
+          # mkdir -p ~/.ssh
+          # echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          # chmod 600 ~/.ssh/id_rsa
+          # ssh -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} "cd /path/to/your/app && git pull origin main && npm install --production && pm2 restart your-app-name"
+          echo "Deployment complete."
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          REMOTE_USER: ${{ secrets.REMOTE_USER }}
+          REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
