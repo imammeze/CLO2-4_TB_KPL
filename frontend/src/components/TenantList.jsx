@@ -134,7 +134,6 @@ import { Link } from "react-router-dom";
 import { tenantService } from "../services/apiService";
 
 // Helper function untuk format tanggal (karena data tanggal belum ada)
-// Anda bisa menggantinya dengan library seperti date-fns nanti
 const formatDate = (dateString) => {
   if (!dateString) return "N/A";
   const options = { year: "numeric", month: "long", day: "numeric" };
