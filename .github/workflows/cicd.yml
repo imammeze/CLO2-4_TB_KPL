@@ -1,0 +1,113 @@
+name: Aplikasi Penyewa CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ] # Pipeline ini berjalan setiap ada push ke branch main
+  pull_request:
+    branches: [ "main" ] # Juga berjalan saat ada pull request ke main
+
+jobs:
+  # Job untuk Backend CI (Inspection & Testing)
+  backend-ci:
+    name: Backend - Lint & Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: 1. Checkout Kode
+        uses: actions/checkout@v4
+
+      - name: 2. Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 3. Instal Dependensi Backend
+        run: npm install
+        working-directory: ./backend
+
+      - name: 4. Jalankan Linter (Continuous Inspection)
+        run: npm run lint
+        working-directory: ./backend
+
+      - name: 5. Jalankan Tes (Continuous Testing)
+        run: npm test
+        working-directory: ./backend
+
+  # Job untuk Frontend CI (Inspection, Testing & Build)
+  frontend-ci:
+    name: Frontend - Lint, Test & Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: 1. Checkout Kode
+        uses: actions/checkout@v4
+
+      - name: 2. Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 3. Instal Dependensi Frontend
+        run: npm install
+        working-directory: ./frontend
+
+      - name: 4. Jalankan Linter (Continuous Inspection)
+        run: npm run lint
+        working-directory: ./frontend
+      
+      # Catatan: Skrip 'test' tidak ada di package.json frontend.
+      # Tambahkan `vitest` atau `jest` untuk menjalankan pengujian.
+      - name: 5. Jalankan Tes (Continuous Testing)
+        run: echo "Test script tidak ditemukan, lewati langkah ini."
+        # Ganti dengan `npm test` setelah konfigurasi pengujian selesai.
+        working-directory: ./frontend
+
+      - name: 6. Build Aplikasi (Continuous Integration)
+        run: npm run build
+        working-directory: ./frontend
+        
+  # Job untuk Deployment Backend
+  deploy-backend:
+    name: Backend - Deploy to GHCR
+    needs: backend-ci # Job ini berjalan setelah backend-ci sukses
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' # Hanya deploy jika push ke branch main
+    
+    steps:
+      - name: 1. Checkout Kode
+        uses: actions/checkout@v4
+
+      - name: 2. Login ke GitHub Container Registry (GHCR)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: <span class="math-inline">\{\{ secrets\.GITHUB\_TOKEN \}\}
+\- name\: 3\. Build & Push Docker Image Backend \(Continuous Deployment\)
+uses\: docker/build\-push\-action@v5
+with\:
+context\: \./backend
+push\: true
+tags\: ghcr\.io/</span>{{ github.repository_owner }}/clo2-4_tb_kpl-backend:latest
+
+  # Job untuk Deployment Frontend
+  deploy-frontend:
+    name: Frontend - Deploy to GHCR
+    needs: frontend-ci # Job ini berjalan setelah frontend-ci sukses
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' # Hanya deploy jika push ke branch main
+
+    steps:
+      - name: 1. Checkout Kode
+        uses: actions/checkout@v4
+
+      - name: 2. Login ke GitHub Container Registry (GHCR)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: <span class="math-inline">\{\{ secrets\.GITHUB\_TOKEN \}\}
+\- name\: 3\. Build & Push Docker Image Frontend \(Continuous Deployment\)
+uses\: docker/build\-push\-action@v5
+with\:
+context\: \./frontend
+push\: true
+tags\: ghcr\.io/</span>{{ github.repository_owner }}/clo2-4_tb_kpl-frontend:latest
