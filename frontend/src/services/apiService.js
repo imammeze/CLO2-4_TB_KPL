@@ -18,7 +18,6 @@ const handleResponse = (response) => {
 const handleError = (error) => {
   if (error.response) {
     // Request dibuat dan server merespons dengan status code
-    // yang berada di luar rentang 2xx
     console.error("API Error Response:", error.response.data);
     // Kita bisa melempar pesan error yang lebih user-friendly
     throw new Error(error.response.data.message || "An error occurred");
